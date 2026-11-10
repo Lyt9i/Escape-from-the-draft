@@ -22,7 +22,7 @@ public class RouteRenderer : MonoBehaviour
             if (!board.IsRouteCell(cell))
                 continue;
 
-            CreatePart("Route Node", routeNodeSprite, CellToWorld(board, cell), 2, 0f);
+            bool hasConnection = false;
 
             foreach (int neighbour in board.Neighbours(cell))
             {
@@ -30,13 +30,17 @@ public class RouteRenderer : MonoBehaviour
                     neighbour == board.PlayerCell ||
                     neighbour == board.DoorCell;
 
-                bool connectsToAnotherNode =
-                    board.IsRouteCell(neighbour) &&
-                    neighbour > cell;
+                bool connectsToAnotherNode = board.IsRouteCell(neighbour);
 
                 if (connectsToActor || connectsToAnotherNode)
+                    hasConnection = true;
+
+                if (connectsToActor || (connectsToAnotherNode && neighbour > cell))
                     CreateConnection(board, cell, neighbour);
             }
+
+            if (!hasConnection)
+                CreatePart("Route Node", routeNodeSprite, CellToWorld(board, cell), 2, 0f);
         }
     }
 

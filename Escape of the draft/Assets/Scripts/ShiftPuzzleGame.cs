@@ -18,6 +18,7 @@ public class ShiftPuzzleGame : MonoBehaviour
     public bool CanAcceptInput => !running && !completed;
     public int Score => score;
     public int BestScore => bestScore;
+    public int CurrentSheet => sheet + 1;
     public int CompletedRoutes => completedRoutes;
     public int CollectedStars => collectedStars;
     public int Moves => board == null ? 0 : board.Moves;
@@ -57,6 +58,7 @@ public class ShiftPuzzleGame : MonoBehaviour
         score = PlayerPrefs.GetInt(ScoreKey);
         bestScore = PlayerPrefs.GetInt(BestScoreKey);
         completedRoutes = PlayerPrefs.GetInt(RoutesKey);
+        sheet = completedRoutes;
         collectedStars = PlayerPrefs.GetInt(StarsKey);
 
         GeneratePuzzle();
@@ -90,6 +92,7 @@ public class ShiftPuzzleGame : MonoBehaviour
 
     public void StartNewGame()
     {
+        StopAllCoroutines();
         score = 0;
         completedRoutes = 0;
         collectedStars = 0;
@@ -252,8 +255,10 @@ public class ShiftPuzzleGame : MonoBehaviour
 
         Debug.Log(
             $"Маршрут собран. Награда: {reward}. " +
-            $"Очки: {score}. Вызови NextPuzzle для следующего листа."
+            $"Очки: {score}. Следующий лист."
         );
+
+        NextPuzzle();
     }
 
     private void Place(Transform target, int cell)
