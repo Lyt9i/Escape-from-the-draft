@@ -30,6 +30,7 @@ public class ShiftPuzzleGame : MonoBehaviour
 
     private ShiftPuzzleBoard board;
     private Camera mainCamera;
+    private ShiftHintRenderer hintRenderer;
 
     private int sheet;
     private int score;
@@ -50,6 +51,8 @@ public class ShiftPuzzleGame : MonoBehaviour
 
         mainCamera = Camera.main;
         board = new ShiftPuzzleBoard(columns, rows);
+        hintRenderer = gameObject.AddComponent<ShiftHintRenderer>();
+        hintRenderer.Show(routeRenderer.GridBounds, columns, rows, columns / 2, rows / 2);
 
         score = PlayerPrefs.GetInt(ScoreKey);
         bestScore = PlayerPrefs.GetInt(BestScoreKey);
@@ -101,51 +104,12 @@ public class ShiftPuzzleGame : MonoBehaviour
         if (!CanAcceptInput)
             return;
 
-        Vector2 swipe = endScreen - startScreen;
-
-        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(
-            new Vector3(
-                startScreen.x,
-                startScreen.y,
-                Mathf.Abs(
-                    routeRenderer.GridBounds.center.z -
-                    mainCamera.transform.position.z
-                )
-            )
-        );
-
-        Bounds bounds = routeRenderer.GridBounds;
-
-        if (worldPosition.x < bounds.min.x || worldPosition.x > bounds.max.x ||
-            worldPosition.y < bounds.min.y || worldPosition.y > bounds.max.y)
-        {
+        if (!TryGetCell(startScreen, out int column, out int row))
             return;
-        }
 
-        int column = Mathf.Clamp(
-            Mathf.FloorToInt(
-                (worldPosition.x - bounds.min.x) /
-                bounds.size.x *
-                columns
-            ),
-            0,
-            columns - 1
-        );
-
-        int row = Mathf.Clamp(
-            Mathf.FloorToInt(
-                (worldPosition.y - bounds.min.y) /
-                bounds.size.y *
-                rows
-            ),
-            0,
-            rows - 1
-        );
-
+        Vector2 swipe = endScreen - startScreen;
         bool shiftRow = Mathf.Abs(swipe.x) > Mathf.Abs(swipe.y);
-
         int lineIndex = shiftRow ? row : column;
-
         int direction = shiftRow
             ? (swipe.x > 0f ? 1 : -1)
             : (swipe.y > 0f ? 1 : -1);
@@ -159,6 +123,59 @@ public class ShiftPuzzleGame : MonoBehaviour
 
         if (path != null)
             StartCoroutine(RunHero(path));
+    }
+
+    public void SelectCell(Vector2 screenPosition)
+    {
+        if (CanAcceptInput && TryGetCell(screenPosition, out int column, out int row))
+            hintRenderer.Show(routeRenderer.GridBounds, columns, rows, column, row);
+    }
+
+    private bool TryGetCell(Vector2 screenPosition, out int column, out int row)
+    {
+        column = 0;
+        row = 0;
+
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(
+            new Vector3(
+                screenPosition.x,
+                screenPosition.y,
+                Mathf.Abs(
+                    routeRenderer.GridBounds.center.z -
+                    mainCamera.transform.position.z
+                )
+            )
+        );
+
+        Bounds bounds = routeRenderer.GridBounds;
+
+        if (worldPosition.x < bounds.min.x || worldPosition.x > bounds.max.x ||
+            worldPosition.y < bounds.min.y || worldPosition.y > bounds.max.y)
+        {
+            return false;
+        }
+
+        column = Mathf.Clamp(
+            Mathf.FloorToInt(
+                (worldPosition.x - bounds.min.x) /
+                bounds.size.x *
+                columns
+            ),
+            0,
+            columns - 1
+        );
+
+        row = Mathf.Clamp(
+            Mathf.FloorToInt(
+                (worldPosition.y - bounds.min.y) /
+                bounds.size.y *
+                rows
+            ),
+            0,
+            rows - 1
+        );
+
+        return true;
     }
 
     private void GeneratePuzzle()

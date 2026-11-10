@@ -24,7 +24,10 @@ public class SwipeInput : MonoBehaviour
             var touch = Touchscreen.current.primaryTouch;
 
             if (touch.press.wasPressedThisFrame)
+            {
                 pointerStart = touch.position.ReadValue();
+                game.SelectCell(pointerStart);
+            }
 
             if (touch.press.wasReleasedThisFrame)
                 TrySendSwipe(touch.position.ReadValue());
@@ -37,7 +40,10 @@ public class SwipeInput : MonoBehaviour
             return;
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
             pointerStart = Mouse.current.position.ReadValue();
+            game.SelectCell(pointerStart);
+        }
 
         if (Mouse.current.leftButton.wasReleasedThisFrame)
             TrySendSwipe(Mouse.current.position.ReadValue());
