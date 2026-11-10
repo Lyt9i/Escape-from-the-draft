@@ -15,7 +15,7 @@ public class ShiftPuzzleGame : MonoBehaviour
     [SerializeField] private int rows = 6;
     [SerializeField] private float heroStepDuration = 0.13f;
 
-    public bool CanAcceptInput => !running && !completed;
+    public bool CanAcceptInput => !running && !completed && !paused;
     public int Score => score;
     public int BestScore => bestScore;
     public int CurrentSheet => sheet + 1;
@@ -41,6 +41,12 @@ public class ShiftPuzzleGame : MonoBehaviour
 
     private bool running;
     private bool completed;
+    private bool paused;
+
+    public void SetPaused(bool value)
+    {
+        paused = value;
+    }
 
     private void Awake()
     {

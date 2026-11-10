@@ -7,6 +7,7 @@ public class SwipeInput : MonoBehaviour
     [SerializeField] private float minimumSwipePixels = 30f;
 
     private Vector2 pointerStart;
+    private bool pointerActive;
 
     private void Awake()
     {
@@ -17,7 +18,10 @@ public class SwipeInput : MonoBehaviour
     private void Update()
     {
         if (game == null || !game.CanAcceptInput)
+        {
+            pointerActive = false;
             return;
+        }
 
         if (Touchscreen.current != null)
         {
@@ -26,6 +30,7 @@ public class SwipeInput : MonoBehaviour
             if (touch.press.wasPressedThisFrame)
             {
                 pointerStart = touch.position.ReadValue();
+                pointerActive = true;
                 game.SelectCell(pointerStart);
             }
 
@@ -42,6 +47,7 @@ public class SwipeInput : MonoBehaviour
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             pointerStart = Mouse.current.position.ReadValue();
+            pointerActive = true;
             game.SelectCell(pointerStart);
         }
 
@@ -51,6 +57,10 @@ public class SwipeInput : MonoBehaviour
 
     private void TrySendSwipe(Vector2 pointerEnd)
     {
+        if (!pointerActive)
+            return;
+
+        pointerActive = false;
         if ((pointerEnd - pointerStart).sqrMagnitude <
             minimumSwipePixels * minimumSwipePixels)
         {
