@@ -9,13 +9,14 @@ public class ShiftPuzzleGame : MonoBehaviour
     [SerializeField] private Transform door;
     [SerializeField] private Transform star;
     [SerializeField] private RouteRenderer routeRenderer;
+    [SerializeField] private BookPageTransitionTest testPageTransition;
 
     [Header("Board")]
     [SerializeField] private int columns = 6;
     [SerializeField] private int rows = 6;
     [SerializeField] private float heroStepDuration = 0.13f;
 
-    public bool CanAcceptInput => !running && !completed && !paused;
+    public bool CanAcceptInput => !running && !completed && !paused && !changingPage;
     public int Score => score;
     public int BestScore => bestScore;
     public int CurrentSheet => sheet + 1;
@@ -42,6 +43,7 @@ public class ShiftPuzzleGame : MonoBehaviour
     private bool running;
     private bool completed;
     private bool paused;
+    private bool changingPage;
 
     public void SetPaused(bool value)
     {
@@ -90,15 +92,35 @@ public class ShiftPuzzleGame : MonoBehaviour
 
     public void NextPuzzle()
     {
-        if (!completed)
+        if (!completed || changingPage)
             return;
 
-        GeneratePuzzle();
+        if (testPageTransition != null && testPageTransition.IsConfigured)
+            StartCoroutine(ChangePage());
+        else
+            GeneratePuzzle();
+    }
+
+    private IEnumerator ChangePage()
+    {
+        changingPage = true;
+        yield return testPageTransition.Play(() =>
+        {
+            routeRenderer.gameObject.SetActive(false);
+            GeneratePuzzle(false);
+        });
+        routeRenderer.gameObject.SetActive(true);
+        routeRenderer.Redraw(board, true);
+        changingPage = false;
     }
 
     public void StartNewGame()
     {
         StopAllCoroutines();
+        if (testPageTransition != null)
+            testPageTransition.Cancel();
+        routeRenderer.gameObject.SetActive(true);
+        changingPage = false;
         score = 0;
         completedRoutes = 0;
         collectedStars = 0;
@@ -187,7 +209,7 @@ public class ShiftPuzzleGame : MonoBehaviour
         return true;
     }
 
-    private void GeneratePuzzle()
+    private void GeneratePuzzle(bool animateRoute = true)
     {
         running = false;
         completed = false;
@@ -200,7 +222,7 @@ public class ShiftPuzzleGame : MonoBehaviour
 
         star.gameObject.SetActive(true);
 
-        routeRenderer.Redraw(board, true);
+        routeRenderer.Redraw(board, animateRoute);
     }
 
     private IEnumerator RunHero(List<int> path)
