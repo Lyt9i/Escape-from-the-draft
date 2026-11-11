@@ -999,6 +999,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4369458917398536282, guid: bda1dd8f530e3594599b0482e49c52a1, type: 3}
+      propertyPath: m_text
+      value: "\u041A\u0430\u043A \u0438\u0433\u0440\u0430\u0442\u044C"
+      objectReference: {fileID: 0}
     - target: {fileID: 6800298606732139034, guid: bda1dd8f530e3594599b0482e49c52a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -1027,6 +1031,10 @@ PrefabInstance:
     - target: {fileID: 1830487867612075408, guid: a03fc5f2fda40be4a8629726cbcfd7aa, type: 3}
       propertyPath: m_Name
       value: NewGameButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 4075444091975562931, guid: a03fc5f2fda40be4a8629726cbcfd7aa, type: 3}
+      propertyPath: m_text
+      value: "\u041D\u043E\u0432\u044B\u0439 \u0437\u0430\u0431\u0435\u0433"
       objectReference: {fileID: 0}
     - target: {fileID: 7262157462549895070, guid: a03fc5f2fda40be4a8629726cbcfd7aa, type: 3}
       propertyPath: m_Pivot.x

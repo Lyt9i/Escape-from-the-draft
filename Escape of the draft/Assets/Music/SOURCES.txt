@@ -1,0 +1,16 @@
+Источники звуков
+
+paper-turn.mp3 — paper_sound_-_1.mp3
+paper-move.mp3 — paper_sound_-_2.mp3
+Автор: Luckius
+Источник: https://opengameart.org/content/various-paper-sound-effects
+Лицензия: Creative Commons CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+
+star.ogg — item.ogg
+door.ogg — door.ogg
+steps.ogg — steps.ogg
+Автор: Delta12 Studio
+Источник: https://opengameart.org/content/rpg-sound-effect-pack
+Лицензия: Creative Commons CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+
+Названия файлов изменены для удобства использования в проекте.

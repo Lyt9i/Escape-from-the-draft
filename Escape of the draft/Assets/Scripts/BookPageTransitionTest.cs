@@ -97,7 +97,7 @@ public class BookPageTransitionTest : MonoBehaviour
             book.RefreshLayout();
     }
 
-    public IEnumerator Play(Action prepareNextPage)
+    public IEnumerator Play(Action prepareNextPage, Action onFlipStart = null)
     {
         if (!IsConfigured)
             yield break;
@@ -150,6 +150,7 @@ public class BookPageTransitionTest : MonoBehaviour
         if (paperSprite != null)
             book.LeftNext.sprite = paperSprite;
         book.RightNext.sprite = screenshotSprite;
+        onFlipStart?.Invoke();
         autoFlip.FlipRightPage();
 
         float elapsed = 0f;

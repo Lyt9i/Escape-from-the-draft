@@ -10,6 +10,7 @@ public class ShiftPuzzleGame : MonoBehaviour
     [SerializeField] private Transform star;
     [SerializeField] private RouteRenderer routeRenderer;
     [SerializeField] private BookPageTransitionTest testPageTransition;
+    [SerializeField] private GameAudio gameAudio;
 
     [Header("Board")]
     [SerializeField] private int columns = 6;
@@ -48,6 +49,8 @@ public class ShiftPuzzleGame : MonoBehaviour
     public void SetPaused(bool value)
     {
         paused = value;
+        if (gameAudio != null)
+            gameAudio.SetPaused(value);
     }
 
     private void Awake()
@@ -108,7 +111,7 @@ public class ShiftPuzzleGame : MonoBehaviour
         {
             routeRenderer.gameObject.SetActive(false);
             GeneratePuzzle(false);
-        });
+        }, () => { if (gameAudio != null) gameAudio.PlayPaperTurn(); });
         routeRenderer.gameObject.SetActive(true);
         routeRenderer.Redraw(board, true);
         changingPage = false;
@@ -117,6 +120,8 @@ public class ShiftPuzzleGame : MonoBehaviour
     public void StartNewGame()
     {
         StopAllCoroutines();
+        if (gameAudio != null)
+            gameAudio.StopAll();
         if (testPageTransition != null)
             testPageTransition.Cancel();
         routeRenderer.gameObject.SetActive(true);
@@ -148,6 +153,8 @@ public class ShiftPuzzleGame : MonoBehaviour
         if (!board.TryShift(shiftRow, lineIndex, direction))
             return;
 
+        if (gameAudio != null)
+            gameAudio.PlayPaperMove();
         routeRenderer.Redraw(board);
 
         List<int> path = board.FindPath();
@@ -229,6 +236,8 @@ public class ShiftPuzzleGame : MonoBehaviour
     {
         running = true;
         bool gotStar = false;
+        if (gameAudio != null)
+            gameAudio.StartSteps();
 
         foreach (int cell in path)
         {
@@ -257,7 +266,15 @@ public class ShiftPuzzleGame : MonoBehaviour
             {
                 gotStar = true;
                 star.gameObject.SetActive(false);
+                if (gameAudio != null)
+                    gameAudio.PlayStar();
             }
+        }
+
+        if (gameAudio != null)
+        {
+            gameAudio.StopSteps();
+            gameAudio.PlayDoor();
         }
 
         int reward = Mathf.Max(
