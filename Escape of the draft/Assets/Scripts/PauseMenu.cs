@@ -1,29 +1,31 @@
-using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
     [SerializeField] private ShiftPuzzleGame game;
     [SerializeField] private GameObject pausePanel;
-    [SerializeField] private TMP_Text restartButtonText;
 
     private bool paused;
-    private bool confirmingRestart;
     private float previousTimeScale;
-    private string restartLabel;
 
     private void Awake()
     {
-        if (game == null || pausePanel == null || restartButtonText == null ||
+        if (game == null || pausePanel == null ||
             pausePanel == gameObject || transform.IsChildOf(pausePanel.transform))
         {
-            Debug.LogError("PauseMenu: назначь Game, Pause и текст кнопки перезапуска; компонент должен быть вне окна Pause.", this);
+            Debug.LogError("PauseMenu: назначь Game и Pause; компонент должен быть вне окна Pause.", this);
             enabled = false;
             return;
         }
 
-        restartLabel = restartButtonText.text;
         pausePanel.SetActive(false);
+    }
+
+    public void ReturnToMenu()
+    {
+        Resume();
+        SceneManager.LoadScene("StartScene");
     }
 
     public void OpenPause()
@@ -43,8 +45,6 @@ public class PauseMenu : MonoBehaviour
         if (!paused)
             return;
 
-        confirmingRestart = false;
-        restartButtonText.text = restartLabel;
         pausePanel.SetActive(false);
         game.SetPaused(false);
         Time.timeScale = previousTimeScale;
@@ -55,13 +55,6 @@ public class PauseMenu : MonoBehaviour
     {
         if (!paused)
             return;
-
-        if (!confirmingRestart)
-        {
-            confirmingRestart = true;
-            restartButtonText.text = "Точно начать заново?";
-            return;
-        }
 
         game.StartNewGame();
         Resume();
