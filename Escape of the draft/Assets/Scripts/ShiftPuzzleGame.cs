@@ -200,7 +200,7 @@ public class ShiftPuzzleGame : MonoBehaviour
 
         star.gameObject.SetActive(true);
 
-        routeRenderer.Redraw(board);
+        routeRenderer.Redraw(board, true);
     }
 
     private IEnumerator RunHero(List<int> path)

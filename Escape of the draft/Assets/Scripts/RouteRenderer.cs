@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class RouteRenderer : MonoBehaviour
@@ -5,6 +7,7 @@ public class RouteRenderer : MonoBehaviour
     [SerializeField] private SpriteRenderer grid;
     [SerializeField] private Sprite routeNodeSprite;
     [SerializeField] private Sprite routeLineSprite;
+    [SerializeField] private float drawDuration = 0.8f;
 
     public bool IsConfigured =>
         grid != null &&
@@ -13,9 +16,11 @@ public class RouteRenderer : MonoBehaviour
 
     public Bounds GridBounds => grid.bounds;
 
-    public void Redraw(ShiftPuzzleBoard board)
+    public void Redraw(ShiftPuzzleBoard board, bool animate = false)
     {
+        StopAllCoroutines();
         Clear();
+        int firstNewPart = transform.childCount;
 
         for (int cell = 0; cell < board.Columns * board.Rows; cell++)
         {
@@ -41,6 +46,51 @@ public class RouteRenderer : MonoBehaviour
 
             if (!hasConnection)
                 CreatePart("Route Node", routeNodeSprite, CellToWorld(board, cell), 2, 0f);
+        }
+
+        if (animate && drawDuration > 0f)
+        {
+            var parts = new List<Transform>();
+            for (int i = firstNewPart; i < transform.childCount; i++)
+            {
+                Transform part = transform.GetChild(i);
+                parts.Add(part);
+                part.gameObject.SetActive(false);
+            }
+
+            if (parts.Count > 0)
+                StartCoroutine(DrawParts(parts));
+        }
+    }
+
+    private IEnumerator DrawParts(List<Transform> parts)
+    {
+        float partDuration = drawDuration / parts.Count;
+
+        foreach (Transform part in parts)
+        {
+            Vector3 finalScale = part.localScale;
+            Vector3 finalPosition = part.position;
+            SpriteRenderer spriteRenderer = part.GetComponent<SpriteRenderer>();
+            float width = spriteRenderer.sprite.bounds.size.x * Mathf.Abs(part.lossyScale.x);
+            Vector3 direction = part.right;
+            float elapsed = 0f;
+
+            part.localScale = new Vector3(0f, finalScale.y, finalScale.z);
+            part.position = finalPosition - direction * width * 0.5f;
+            part.gameObject.SetActive(true);
+
+            while (elapsed < partDuration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = Mathf.Clamp01(elapsed / partDuration);
+                part.localScale = new Vector3(finalScale.x * progress, finalScale.y, finalScale.z);
+                part.position = finalPosition - direction * width * 0.5f * (1f - progress);
+                yield return null;
+            }
+
+            part.localScale = finalScale;
+            part.position = finalPosition;
         }
     }
 
