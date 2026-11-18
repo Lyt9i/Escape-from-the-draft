@@ -185,6 +185,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShiftPuzzleGame
   hero: {fileID: 319527369}
+  pointFrames:
+  - {fileID: 6983202077367773121, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 823470346281440977, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 406328288990071328, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 377579391855768947, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 1026594160438267261, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 135490306064969319, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 893429470610346640, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 111714614534994700, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  scarfFrames:
+  - {fileID: 1089174531342910847, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 754501350432181311, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 217937327812827272, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 50632012663625973, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 188234505645324805, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 446959272128657111, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 983876374172530601, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 937343109668922172, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  walkFrames:
+  - {fileID: 75922857961641538, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 348794214377138664, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 617293846344045699, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 735875221587597826, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 947456389085314637, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 271792140326820231, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 928357609398006515, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
+  - {fileID: 934559415089960299, guid: fb69b611c573b6549b0e8eba31825b40, type: 3}
   door: {fileID: 1405446418}
   star: {fileID: 2016332207}
   routeRenderer: {fileID: 738674459}

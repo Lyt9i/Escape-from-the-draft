@@ -6,6 +6,9 @@ public class ShiftPuzzleGame : MonoBehaviour
 {
     [Header("Objects")]
     [SerializeField] private Transform hero;
+    [SerializeField] private Sprite[] pointFrames;
+    [SerializeField] private Sprite[] scarfFrames;
+    [SerializeField] private Sprite[] walkFrames;
     [SerializeField] private Transform door;
     [SerializeField] private Transform star;
     [SerializeField] private RouteRenderer routeRenderer;
@@ -34,6 +37,10 @@ public class ShiftPuzzleGame : MonoBehaviour
     private ShiftPuzzleBoard board;
     private Camera mainCamera;
     private ShiftHintRenderer hintRenderer;
+    private SpriteRenderer heroRenderer;
+    private Coroutine intro;
+    private static readonly float[] PointTiming = { .45f, .22f, .35f, .45f, .22f, .50f, .40f, .22f };
+    private static readonly float[] ScarfTiming = { .45f, .18f, .25f, .30f, .30f, .25f, .20f, .45f };
 
     private int sheet;
     private int score;
@@ -62,6 +69,7 @@ public class ShiftPuzzleGame : MonoBehaviour
         }
 
         mainCamera = Camera.main;
+        heroRenderer = hero.GetComponent<SpriteRenderer>();
         board = new ShiftPuzzleBoard(columns, rows);
         hintRenderer = gameObject.AddComponent<ShiftHintRenderer>();
         hintRenderer.Show(routeRenderer.GridBounds, columns, rows, columns / 2, rows / 2);
@@ -230,26 +238,57 @@ public class ShiftPuzzleGame : MonoBehaviour
         star.gameObject.SetActive(true);
 
         routeRenderer.Redraw(board, animateRoute);
+        heroRenderer.flipX = false;
+        intro = StartCoroutine(PlayIntro());
+    }
+
+    private IEnumerator PlayIntro()
+    {
+        heroRenderer.sprite = pointFrames[0];
+        while (changingPage)
+            yield return null;
+
+        yield return PlayGesture(pointFrames, PointTiming);
+        intro = null;
+    }
+
+    private IEnumerator PlayGesture(Sprite[] frames, float[] timing)
+    {
+        for (int i = 0; i < frames.Length; i++)
+        {
+            heroRenderer.sprite = frames[i];
+            yield return new WaitForSeconds(timing[i]);
+        }
     }
 
     private IEnumerator RunHero(List<int> path)
     {
         running = true;
         bool gotStar = false;
+        if (intro != null)
+            yield return intro;
+        yield return PlayGesture(scarfFrames, ScarfTiming);
+
         if (gameAudio != null)
             gameAudio.StartSteps();
 
-        foreach (int cell in path)
+        float walkTime = 0f;
+        for (int i = 1; i < path.Count; i++)
         {
+            int cell = path[i];
             Vector3 start = hero.position;
             Vector3 target = routeRenderer.CellToWorld(board, cell);
             target.z = hero.position.z;
+            if (!Mathf.Approximately(start.x, target.x))
+                heroRenderer.flipX = target.x < start.x;
 
             float time = 0f;
 
             while (time < heroStepDuration)
             {
                 time += Time.deltaTime;
+                heroRenderer.sprite = walkFrames[(int)(walkTime * 20f) % walkFrames.Length];
+                walkTime += Time.deltaTime;
 
                 hero.position = Vector3.Lerp(
                     start,
@@ -271,6 +310,7 @@ public class ShiftPuzzleGame : MonoBehaviour
             }
         }
 
+        heroRenderer.sprite = pointFrames[0];
         if (gameAudio != null)
         {
             gameAudio.StopSteps();
@@ -317,6 +357,10 @@ public class ShiftPuzzleGame : MonoBehaviour
     {
         bool configured =
             hero != null &&
+            hero.GetComponent<SpriteRenderer>() != null &&
+            HasFrames(pointFrames, PointTiming.Length) &&
+            HasFrames(scarfFrames, ScarfTiming.Length) &&
+            HasFrames(walkFrames, 8) &&
             door != null &&
             star != null &&
             routeRenderer != null &&
@@ -328,6 +372,11 @@ public class ShiftPuzzleGame : MonoBehaviour
             Debug.LogError("ShiftPuzzleGame: назначь все ссылки в Inspector.");
 
         return configured;
+    }
+
+    private static bool HasFrames(Sprite[] frames, int count)
+    {
+        return frames != null && frames.Length == count && System.Array.TrueForAll(frames, frame => frame != null);
     }
 
     private void SaveStats()
