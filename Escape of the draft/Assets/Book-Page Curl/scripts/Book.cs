@@ -4,6 +4,7 @@
 
 using UnityEngine;
 using System.Collections;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.Events;
 public enum FlipMode
@@ -78,6 +79,11 @@ public class Book : MonoBehaviour {
         RefreshLayout();
     }
 
+    private void OnDisable()
+    {
+        pageDragging = false;
+    }
+
     public void RefreshLayout()
     {
         CalcCurlCriticalPoints();
@@ -124,7 +130,7 @@ public class Book : MonoBehaviour {
         }
         else if (canvas.renderMode == RenderMode.WorldSpace)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = Camera.main.ScreenPointToRay(mouseScreenPos);
             Vector3 globalEBR = transform.TransformPoint(ebr);
             Vector3 globalEBL = transform.TransformPoint(ebl);
             Vector3 globalSt = transform.TransformPoint(st);
@@ -150,7 +156,9 @@ public class Book : MonoBehaviour {
     }
     public void UpdateBook()
     {
-        f = Vector3.Lerp(f, transformPoint(Input.mousePosition), Time.deltaTime * 10);
+        if (Pointer.current == null) return;
+
+        f = Vector3.Lerp(f, transformPoint(Pointer.current.position.ReadValue()), Time.deltaTime * 10);
         if (mode == FlipMode.RightToLeft)
             UpdateBookRTLToPoint(f);
         else
@@ -310,8 +318,8 @@ public class Book : MonoBehaviour {
     }
     public void OnMouseDragRightPage()
     {
-        if (interactable)
-        DragRightPageToPoint(transformPoint(Input.mousePosition));
+        if (interactable && Pointer.current != null)
+            DragRightPageToPoint(transformPoint(Pointer.current.position.ReadValue()));
         
     }
     public void DragLeftPageToPoint(Vector3 point)
@@ -344,8 +352,8 @@ public class Book : MonoBehaviour {
     }
     public void OnMouseDragLeftPage()
     {
-        if (interactable)
-        DragLeftPageToPoint(transformPoint(Input.mousePosition));
+        if (interactable && Pointer.current != null)
+            DragLeftPageToPoint(transformPoint(Pointer.current.position.ReadValue()));
         
     }
     public void OnMouseRelease()

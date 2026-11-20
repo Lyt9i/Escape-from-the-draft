@@ -10,10 +10,7 @@ public class StartMenu : MonoBehaviour
 
     public void ConfirmNewGame()
     {
-        PlayerPrefs.DeleteKey("draft-shift-score");
-        PlayerPrefs.DeleteKey("draft-shift-routes");
-        PlayerPrefs.DeleteKey("draft-shift-stars");
-        PlayerPrefs.Save();
+        ShiftPuzzleGame.ClearSavedRun();
         SceneManager.LoadScene("GameScene");
     }
 

@@ -40,7 +40,7 @@ public class BookPageTransitionTest : MonoBehaviour
         bookParent = book.transform.parent as RectTransform;
         if (paperSprite == null)
         {
-            BackgroundFit background = FindObjectOfType<BackgroundFit>();
+            BackgroundFit background = FindAnyObjectByType<BackgroundFit>();
             if (background != null && background.TryGetComponent(out SpriteRenderer backgroundRenderer))
                 paperSprite = backgroundRenderer.sprite;
         }

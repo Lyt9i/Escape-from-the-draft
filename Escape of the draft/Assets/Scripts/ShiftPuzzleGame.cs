@@ -20,7 +20,7 @@ public class ShiftPuzzleGame : MonoBehaviour
     [SerializeField] private int rows = 6;
     [SerializeField] private float heroStepDuration = 0.13f;
 
-    public bool CanAcceptInput => !running && !completed && !paused && !changingPage;
+    public bool CanAcceptInput => isActiveAndEnabled && board != null && !running && !completed && !paused && !changingPage;
     public int Score => score;
     public int BestScore => bestScore;
     public int CurrentSheet => sheet + 1;
@@ -62,13 +62,13 @@ public class ShiftPuzzleGame : MonoBehaviour
 
     private void Awake()
     {
+        mainCamera = Camera.main;
         if (!IsConfigured())
         {
             enabled = false;
             return;
         }
 
-        mainCamera = Camera.main;
         heroRenderer = hero.GetComponent<SpriteRenderer>();
         board = new ShiftPuzzleBoard(columns, rows);
         hintRenderer = gameObject.AddComponent<ShiftHintRenderer>();
@@ -127,6 +127,9 @@ public class ShiftPuzzleGame : MonoBehaviour
 
     public void StartNewGame()
     {
+        if (!isActiveAndEnabled || board == null)
+            return;
+
         StopAllCoroutines();
         if (gameAudio != null)
             gameAudio.StopAll();
@@ -338,11 +341,6 @@ public class ShiftPuzzleGame : MonoBehaviour
 
         SaveStats();
 
-        Debug.Log(
-            $"Маршрут собран. Награда: {reward}. " +
-            $"Очки: {score}. Следующий лист."
-        );
-
         NextPuzzle();
     }
 
@@ -356,6 +354,7 @@ public class ShiftPuzzleGame : MonoBehaviour
     private bool IsConfigured()
     {
         bool configured =
+            mainCamera != null &&
             hero != null &&
             hero.GetComponent<SpriteRenderer>() != null &&
             HasFrames(pointFrames, PointTiming.Length) &&
@@ -369,7 +368,7 @@ public class ShiftPuzzleGame : MonoBehaviour
             rows >= 3;
 
         if (!configured)
-            Debug.LogError("ShiftPuzzleGame: назначь все ссылки в Inspector.");
+            Debug.LogError("ShiftPuzzleGame: проверь ссылки в Inspector и наличие камеры с тегом MainCamera.", this);
 
         return configured;
     }
@@ -377,6 +376,14 @@ public class ShiftPuzzleGame : MonoBehaviour
     private static bool HasFrames(Sprite[] frames, int count)
     {
         return frames != null && frames.Length == count && System.Array.TrueForAll(frames, frame => frame != null);
+    }
+
+    internal static void ClearSavedRun()
+    {
+        PlayerPrefs.DeleteKey(ScoreKey);
+        PlayerPrefs.DeleteKey(RoutesKey);
+        PlayerPrefs.DeleteKey(StarsKey);
+        PlayerPrefs.Save();
     }
 
     private void SaveStats()

@@ -22,6 +22,13 @@ public class AutoFlip : MonoBehaviour {
     {
         isFlipping = false;
     }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        isFlipping = false;
+    }
+
 	public void StartFlipping()
     {
         StartCoroutine(FlipToEnd());
