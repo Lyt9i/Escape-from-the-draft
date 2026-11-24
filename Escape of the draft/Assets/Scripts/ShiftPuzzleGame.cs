@@ -224,7 +224,7 @@ public class ShiftPuzzleGame : MonoBehaviour
             rows - 1
         );
 
-        return true;
+        return !board.IsInkCell(board.Cell(column, row));
     }
 
     private void GeneratePuzzle(bool animateRoute = true)
@@ -233,6 +233,7 @@ public class ShiftPuzzleGame : MonoBehaviour
         completed = false;
 
         board.Generate(sheet);
+        hintRenderer.ClearInk();
 
         Place(hero, board.PlayerCell);
         Place(door, board.DoorCell);
@@ -251,6 +252,7 @@ public class ShiftPuzzleGame : MonoBehaviour
         while (changingPage)
             yield return null;
 
+        hintRenderer.ShowInk(board, routeRenderer);
         yield return PlayGesture(pointFrames, PointTiming);
         intro = null;
     }

@@ -4,6 +4,8 @@ using UnityEngine;
 public sealed class ShiftPuzzleBoard
 {
     private readonly List<bool[]> history = new List<bool[]>();
+    private readonly List<int> inkCells = new List<int>();
+    public IReadOnlyList<int> InkCells => inkCells;
 
     public int Columns { get; }
     public int Rows { get; }
@@ -54,6 +56,28 @@ public sealed class ShiftPuzzleBoard
         for (int column = pivotColumn; column < Columns - 1; column++)
             solvedCells[Cell(column, doorRow)] = true;
 
+        inkCells.Clear();
+        if (sheet >= 10)
+        {
+            var candidates = new List<int>();
+            for (int column = 1; column < Columns - 1; column++)
+                if (column != pivotColumn)
+                    candidates.Add(column);
+
+            int count = Mathf.Min(sheet >= 15 ? 2 : 1, candidates.Count);
+            for (int i = 0; i < count; i++)
+            {
+                int pick = Random.Range(0, candidates.Count);
+                int column = candidates[pick];
+                int routeRow = column < pivotColumn ? playerRow : doorRow;
+                int oppositeRow = column < pivotColumn ? doorRow : playerRow;
+                int inkRow = routeRow + (oppositeRow > routeRow ? 1 : -1);
+                inkCells.Add(Cell(column, inkRow));
+                candidates.RemoveAt(pick);
+            }
+        }
+
+        bool[] cleanRoute = Copy(solvedCells);
         for (int i = 0; i < 3; i++)
         {
             int randomCell;
@@ -62,7 +86,7 @@ public sealed class ShiftPuzzleBoard
             {
                 randomCell = Random.Range(0, solvedCells.Length);
             }
-            while (randomCell == PlayerCell || randomCell == DoorCell);
+            while (randomCell == PlayerCell || randomCell == DoorCell || IsInkCell(randomCell));
 
             solvedCells[randomCell] = true;
         }
@@ -82,7 +106,7 @@ public sealed class ShiftPuzzleBoard
                 RotateLine(shiftRow, index, direction);
             }
 
-            if (!HasPath())
+            if (!HasPath() && inkCells.TrueForAll(HasRouteNeighbour))
             {
                 Par = scrambleCount;
                 initialCells = Copy(cells);
@@ -90,8 +114,9 @@ public sealed class ShiftPuzzleBoard
             }
         }
 
-        cells = Copy(solvedCells);
-        RotateLine(false, 1, 1);
+        cells = cleanRoute;
+        RotateLine(false, pivotColumn, doorRow > playerRow ? 1 : -1);
+        Debug.Assert(!HasPath());
         Par = 1;
         initialCells = Copy(cells);
     }
@@ -137,6 +162,20 @@ public sealed class ShiftPuzzleBoard
     public bool IsRouteCell(int cell)
     {
         return cells[cell];
+    }
+
+    public bool IsInkCell(int cell)
+    {
+        return inkCells.Contains(cell);
+    }
+
+    private bool HasRouteNeighbour(int cell)
+    {
+        foreach (int neighbour in Neighbours(cell))
+            if (cells[neighbour] || neighbour == PlayerCell || neighbour == DoorCell)
+                return true;
+
+        return false;
     }
 
     public bool HasPath()
@@ -228,7 +267,7 @@ public sealed class ShiftPuzzleBoard
         {
             int cell = shiftRow ? Cell(i, index) : Cell(index, i);
 
-            if (cell != PlayerCell && cell != DoorCell)
+            if (cell != PlayerCell && cell != DoorCell && !IsInkCell(cell))
                 line.Add(cell);
         }
 
