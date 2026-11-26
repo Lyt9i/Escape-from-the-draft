@@ -13,6 +13,34 @@ public class RouteRenderer : MonoBehaviour
     private static readonly Vector2Int[] Sides =
         { Vector2Int.right, Vector2Int.up, Vector2Int.left, Vector2Int.down };
 
+    private Sprite firstStrokeHalf;
+    private Sprite secondStrokeHalf;
+
+    private void Awake()
+    {
+        if (routeLineSprite == null)
+            return;
+
+        // Keep the same ink contour when a connection separates during a swipe.
+        Rect half = routeLineSprite.rect;
+        half.width *= 0.5f;
+        firstStrokeHalf = CreateStrokeHalf(half);
+        half.x += half.width;
+        secondStrokeHalf = CreateStrokeHalf(half);
+    }
+
+    private Sprite CreateStrokeHalf(Rect rect)
+    {
+        return Sprite.Create(routeLineSprite.texture, rect, new Vector2(0.5f, 0.5f),
+            routeLineSprite.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+    }
+
+    private void OnDestroy()
+    {
+        Destroy(firstStrokeHalf);
+        Destroy(secondStrokeHalf);
+    }
+
     private struct ShiftPart
     {
         public SpriteRenderer sprite;
@@ -131,13 +159,11 @@ public class RouteRenderer : MonoBehaviour
                     }
 
                     Vector3 offset = new Vector3(axis.x * cellSize.x, axis.y * cellSize.y) * 0.25f;
-                    var arm = CreatePart("Sliding Stroke", routeLineSprite, start + offset, 1,
+                    Sprite strokeHalf = axis.x > 0 || axis.y > 0 ? firstStrokeHalf : secondStrokeHalf;
+                    var arm = CreatePart("Sliding Stroke", strokeHalf, start + offset, 1,
                         axis.x == 0 ? 90f : 0f);
-                    Vector3 scale = arm.transform.localScale;
-                    scale.x *= 0.5f;
-                    arm.transform.localScale = scale;
                     moving.Add(new ShiftPart { sprite = arm, start = start, end = end, offset = offset,
-                        scale = scale, leavesLine = gap, visibleBefore = (before & bit) != 0,
+                        scale = arm.transform.localScale, leavesLine = gap, visibleBefore = (before & bit) != 0,
                         visibleAfter = (after & bit) != 0 });
                 }
 
