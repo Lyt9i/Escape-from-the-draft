@@ -8,6 +8,34 @@ public class RouteRenderer : MonoBehaviour
     [SerializeField] private Sprite routeNodeSprite;
     [SerializeField] private Sprite routeLineSprite;
     [SerializeField] private float drawDuration = 0.8f;
+    [SerializeField, Min(0f)] private float shiftDuration = 0.22f;
+
+    private static readonly Vector2Int[] Sides =
+        { Vector2Int.right, Vector2Int.up, Vector2Int.left, Vector2Int.down };
+
+    private struct ShiftPart
+    {
+        public SpriteRenderer sprite;
+        public Vector3 start, end, offset, scale;
+        public bool leavesLine, visibleBefore, visibleAfter;
+
+        public void Place(float t, Vector3 step)
+        {
+            Vector3 center = Vector3.Lerp(start, end, t);
+            float size = 1f;
+            if (leavesLine)
+            {
+                // Fold into the outgoing edge and grow from the incoming edge.
+                center = t < 0.5f ? start + step * t : end - step * (1f - t);
+                size = Mathf.Abs(1f - 2f * t);
+            }
+
+            sprite.transform.position = center + offset * size;
+            sprite.transform.localScale = scale * size;
+            float opacity = Mathf.Lerp(visibleBefore ? 1f : 0f, visibleAfter ? 1f : 0f, t);
+            sprite.color = new Color(1f, 1f, 1f, opacity);
+        }
+    }
 
     public bool IsConfigured =>
         grid != null &&
@@ -61,6 +89,99 @@ public class RouteRenderer : MonoBehaviour
             if (parts.Count > 0)
                 StartCoroutine(DrawParts(parts));
         }
+    }
+
+    public IEnumerator AnimateShift(ShiftPuzzleBoard board, Dictionary<int, int> destinations,
+        bool shiftRow, int direction)
+    {
+        if (shiftDuration > 0f)
+        {
+            StopAllCoroutines();
+            Clear();
+            Vector3 cellSize = new Vector3(GridBounds.size.x / board.Columns, GridBounds.size.y / board.Rows);
+            Vector3 step = (shiftRow ? Vector3.right * cellSize.x : Vector3.up * cellSize.y) * direction;
+            var moving = new List<ShiftPart>();
+
+            for (int cell = 0; cell < board.Columns * board.Rows; cell++)
+            {
+                int target = Destination(cell, destinations);
+                bool actor = cell == board.PlayerCell || cell == board.DoorCell;
+                if (!actor && !board.IsRouteCell(target))
+                    continue;
+
+                int before = ConnectionMask(board, cell, destinations);
+                int after = ConnectionMask(board, target, null);
+                Vector3 start = CellToWorld(board, cell), end = CellToWorld(board, target);
+                start.z = end.z = transform.position.z;
+                bool gap = cell != target && (end - start - step).sqrMagnitude > step.sqrMagnitude * 0.01f;
+                for (int side = 0; side < Sides.Length; side++)
+                {
+                    int bit = 1 << side;
+                    if (((before | after) & bit) == 0)
+                        continue;
+
+                    Vector2Int axis = Sides[side];
+                    int neighbour = cell + axis.x + axis.y * board.Columns;
+                    if (cell == target && (before & after & bit) != 0 &&
+                        Destination(neighbour, destinations) == neighbour)
+                    {
+                        if (cell < neighbour)
+                            CreateConnection(board, cell, neighbour);
+                        continue;
+                    }
+
+                    Vector3 offset = new Vector3(axis.x * cellSize.x, axis.y * cellSize.y) * 0.25f;
+                    var arm = CreatePart("Sliding Stroke", routeLineSprite, start + offset, 1,
+                        axis.x == 0 ? 90f : 0f);
+                    Vector3 scale = arm.transform.localScale;
+                    scale.x *= 0.5f;
+                    arm.transform.localScale = scale;
+                    moving.Add(new ShiftPart { sprite = arm, start = start, end = end, offset = offset,
+                        scale = scale, leavesLine = gap, visibleBefore = (before & bit) != 0,
+                        visibleAfter = (after & bit) != 0 });
+                }
+
+                if (!actor && (before == 0 || after == 0))
+                {
+                    var dot = CreatePart("Sliding Node", routeNodeSprite, start, 2, 0f);
+                    moving.Add(new ShiftPart { sprite = dot, start = start, end = end,
+                        scale = dot.transform.localScale, leavesLine = gap,
+                        visibleBefore = before == 0, visibleAfter = after == 0 });
+                }
+            }
+
+            for (float elapsed = 0f; elapsed < shiftDuration; elapsed += Time.deltaTime)
+            {
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / shiftDuration);
+                foreach (ShiftPart part in moving)
+                    part.Place(t, step);
+                yield return null;
+            }
+        }
+        Redraw(board);
+    }
+
+    private static int Destination(int cell, Dictionary<int, int> destinations)
+    {
+        return destinations != null && destinations.TryGetValue(cell, out int target) ? target : cell;
+    }
+
+    private static int ConnectionMask(ShiftPuzzleBoard board, int cell, Dictionary<int, int> destinations)
+    {
+        int mask = 0;
+        for (int i = 0; i < Sides.Length; i++)
+        {
+            int x = board.Column(cell) + Sides[i].x, y = board.Row(cell) + Sides[i].y;
+            if (x < 0 || y < 0 || x >= board.Columns || y >= board.Rows)
+                continue;
+            int neighbour = board.Cell(x, y);
+            // After the board rotates, the old contents of each cell live at its destination.
+            if (board.IsRouteCell(Destination(neighbour, destinations)) ||
+                (board.IsRouteCell(Destination(cell, destinations)) &&
+                (neighbour == board.PlayerCell || neighbour == board.DoorCell)))
+                mask |= 1 << i;
+        }
+        return mask;
     }
 
     private IEnumerator DrawParts(List<Transform> parts)
@@ -132,7 +253,7 @@ public class RouteRenderer : MonoBehaviour
         );
     }
 
-    private void CreatePart(
+    private SpriteRenderer CreatePart(
         string objectName,
         Sprite sprite,
         Vector3 position,
@@ -160,6 +281,7 @@ public class RouteRenderer : MonoBehaviour
 
         renderer.sprite = sprite;
         renderer.sortingOrder = sortingOrder;
+        return renderer;
     }
 
     private void Clear()

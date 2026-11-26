@@ -121,7 +121,7 @@ public sealed class ShiftPuzzleBoard
         initialCells = Copy(cells);
     }
 
-    public bool TryShift(bool shiftRow, int index, int direction)
+    public bool TryShift(bool shiftRow, int index, int direction, Dictionary<int, int> destinations = null)
     {
         if (direction != -1 && direction != 1)
             return false;
@@ -132,7 +132,7 @@ public sealed class ShiftPuzzleBoard
             return false;
 
         bool[] beforeMove = Copy(cells);
-        RotateLine(shiftRow, index, direction);
+        RotateLine(shiftRow, index, direction, destinations);
 
         if (AreEqual(beforeMove, cells))
             return false;
@@ -258,7 +258,7 @@ public sealed class ShiftPuzzleBoard
         return cell / Columns;
     }
 
-    private void RotateLine(bool shiftRow, int index, int direction)
+    private void RotateLine(bool shiftRow, int index, int direction, Dictionary<int, int> destinations = null)
     {
         var line = new List<int>();
         int length = shiftRow ? Columns : Rows;
@@ -280,6 +280,8 @@ public sealed class ShiftPuzzleBoard
         {
             int sourceIndex = Modulo(i - direction, line.Count);
             cells[line[i]] = values[sourceIndex];
+            if (destinations != null)
+                destinations[line[sourceIndex]] = line[i];
         }
     }
 

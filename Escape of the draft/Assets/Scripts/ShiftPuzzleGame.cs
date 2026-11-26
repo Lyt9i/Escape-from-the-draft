@@ -161,17 +161,24 @@ public class ShiftPuzzleGame : MonoBehaviour
             ? (swipe.x > 0f ? 1 : -1)
             : (swipe.y > 0f ? 1 : -1);
 
-        if (!board.TryShift(shiftRow, lineIndex, direction))
+        var destinations = new Dictionary<int, int>();
+        if (!board.TryShift(shiftRow, lineIndex, direction, destinations))
             return;
 
         if (gameAudio != null)
             gameAudio.PlayPaperMove();
-        routeRenderer.Redraw(board);
+        running = true;
+        StartCoroutine(FinishShift(destinations, shiftRow, direction));
+    }
 
+    private IEnumerator FinishShift(Dictionary<int, int> destinations, bool shiftRow, int direction)
+    {
+        yield return routeRenderer.AnimateShift(board, destinations, shiftRow, direction);
         List<int> path = board.FindPath();
-
         if (path != null)
-            StartCoroutine(RunHero(path));
+            yield return RunHero(path);
+        else
+            running = false;
     }
 
     public void SelectCell(Vector2 screenPosition)
